@@ -1,6 +1,7 @@
 import { ApolloClient, createHttpLink, InMemoryCache, makeVar } from "@apollo/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setContext } from "@apollo/client/link/context";
+import { offsetLimitPagination } from "@apollo/client/utilities";
 
 export const isLoggedInVar = makeVar(false);
 export const tokenVar = makeVar("");
@@ -21,6 +22,7 @@ export const logUserOut = async () => {
 
 const httpLink = createHttpLink({
     uri: "https://bomi-instaclone-backend.herokuapp.com/graphql",
+    // uri: "http://172.30.1.56:4000/graphql",
 });
 const authLink = setContext((_, { headers }) => {
     return {
@@ -30,9 +32,18 @@ const authLink = setContext((_, { headers }) => {
         },
     };
 });
+export const cache = new InMemoryCache({
+    typePolicies: {
+        Query: {
+            fields: {
+                seeFeed: offsetLimitPagination(),
+            },
+        },
+    },
+});
 const client = new ApolloClient({
     link: authLink.concat(httpLink),
-    cache: new InMemoryCache(),
+    cache,
 });
 
 export default client;

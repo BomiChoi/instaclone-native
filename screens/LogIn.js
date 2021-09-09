@@ -17,13 +17,13 @@ const LOGIN_MUTATION = gql`
 `;
 
 export default function LogIn({ route: { params } }) {
-    const { register, handleSubmit, setValue, watch, formState } = useForm({
+    const { register, handleSubmit, setValue, watch } = useForm({
         defaultValues: {
             password: params?.password,
             username: params?.username
         }
     });
-
+    const passwordRef = useRef();
     const onCompleted = async (data) => {
         const { login: { ok, token } } = data;
         if (ok) {
@@ -36,7 +36,7 @@ export default function LogIn({ route: { params } }) {
         onCompleted,
     });
 
-    const passwordRef = useRef();
+
     const onNext = (nextOne) => {
         nextOne?.current?.focus();
     }

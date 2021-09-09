@@ -6,35 +6,33 @@ import * as Font from "expo-font";
 import LoggedOutNav from './navigators/LoggedOutNav';
 import LoggedInNav from "./navigators/LoggedInNav";
 import { NavigationContainer } from "@react-navigation/native";
-import { AppearanceProvider } from 'react-native-appearance';
 import { ApolloProvider, useReactiveVar } from '@apollo/client';
-import { ThemeProvider } from 'styled-components';
-import { Appearance } from 'react-native';
-import client, { isLoggedInVar, tokenVar } from './apollo';
+import client, { isLoggedInVar, tokenVar, cache } from './apollo';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AsyncStorageWrapper, persistCache } from "apollo3-cache-persist";
 
 export default function App() {
   const [loading, setLoading] = useState(true);
-  const isLoggedIn = useReactiveVar(isLoggedInVar);
   const onFinish = () => setLoading(false);
+  const isLoggedIn = useReactiveVar(isLoggedInVar);
 
   const preloadAssets = () => {
     const fontsToLoad = [Ionicons.font];
     const fontPromises = fontsToLoad.map((font) => Font.loadAsync(font));
-    const imagesToLoad = [
-      require("./assets/logo.png"),
-      "https://upload.wikimedia.org/wikipedia/commons/2/2a/Instagram_logo.svg"
-    ]
+    const imagesToLoad = [require("./assets/logo.png")];
     const imagePromises = imagesToLoad.map((image) => Asset.loadAsync(image));
     return Promise.all([...fontPromises, ...imagePromises]);
   };
   const preload = async () => {
     const token = await AsyncStorage.getItem("token");
-    console.log(token);
     if (token) {
       isLoggedInVar(true);
       tokenVar(token);
     }
+    await persistCache({
+      cache,
+      storage: new AsyncStorageWrapper(AsyncStorage),
+    });
     return preloadAssets();
   };
 
@@ -47,19 +45,11 @@ export default function App() {
       />
     );
   }
-  // const light = Appearance.getColorScheme() === "light";
-  // const subscription = Appearance.addChangeListener(({ colorScheme }) => {
-  //   console.log(colorScheme);
-  // });
   return (
     <ApolloProvider client={client}>
-      <AppearanceProvider>
-        {/* <ThemeProvider theme={light ? lightTheme : darkTheme}> */}
-        <NavigationContainer>
-          {isLoggedIn ? <LoggedInNav /> : <LoggedOutNav />}
-        </NavigationContainer>
-        {/* </ThemeProvider> */}
-      </AppearanceProvider>
+      <NavigationContainer>
+        {isLoggedIn ? <LoggedInNav /> : <LoggedOutNav />}
+      </NavigationContainer>
     </ApolloProvider>
   );
 }

@@ -9,7 +9,7 @@ export default function Profile() {
             alignItems: "center",
             justifyContent: "center"
         }}>
-            <Text style={{ color: "white" }}>Profile</Text>
+            <Text style={{ color: "white" }}>Someone's Profile</Text>
         </View>
     );
 }

@@ -1,7 +1,14 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text } from "react-native";
 
-export default function Profile() {
+export default function Profile({ navigation, route }) {
+    useEffect(() => {
+        if (route?.params?.username) {
+            navigation.setOptions({
+                title: route.params.username,
+            });
+        }
+    }, []);
     return (
         <View style={{
             backgroundColor: "black",
@@ -9,7 +16,9 @@ export default function Profile() {
             alignItems: "center",
             justifyContent: "center"
         }}>
-            <Text style={{ color: "white" }}>Someone's Profile</Text>
+            <Text style={{ color: "white" }}>
+                {route?.params?.username ? route.params.username : ""}'s Profile
+            </Text>
         </View>
     );
 }

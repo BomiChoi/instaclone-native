@@ -1,6 +1,6 @@
 import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
-import SeePhoto from "../screens/SeePhoto";
+import PhotoScreen from "../screens/PhotoScreen";
 import Profile from "../screens/Profile";
 import Feed from "../screens/Feed";
 import Search from "../screens/Search";
@@ -54,7 +54,7 @@ export default function SharedStackNav({ screenName }) {
                 <Stack.Screen name={"Me"} component={Me} />
             ) : null}
             <Stack.Screen name="Profile" component={Profile} />
-            <Stack.Screen name="SeePhoto" component={SeePhoto} />
+            <Stack.Screen name="Photo" component={PhotoScreen} />
             <Stack.Screen name="Likes" component={Likes} />
             <Stack.Screen name="Comments" component={Comments} />
         </Stack.Navigator>

@@ -5,6 +5,7 @@ import styled from "styled-components/native";
 import { Image, useWindowDimensions } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
+import { gql, useMutation } from "@apollo/client";
 
 const Container = styled.View``;
 const Header = styled.TouchableOpacity`
@@ -46,6 +47,15 @@ const ExtraContainer = styled.View`
     padding: 10px;
 `;
 
+const TOGGLE_LIKE_MUTATION = gql`
+  mutation toggleLike($id: Int!) {
+    toggleLike(id: $id) {
+      ok
+      error
+    }
+  }
+`;
+
 function Photo({ id, user, caption, file, isLiked, likes }) {
     const navigation = useNavigation();
     const { width, height } = useWindowDimensions();
@@ -55,9 +65,45 @@ function Photo({ id, user, caption, file, isLiked, likes }) {
             setImageHeight(height / 3);
         });
     }, [file]);
+    const updateToggleLike = (cache, result) => {
+        const {
+            data: {
+                toggleLike: { ok },
+            },
+        } = result;
+        if (ok) {
+            const photoId = `Photo:${id}`;
+            cache.modify({
+                id: photoId,
+                fields: {
+                    isLiked(prev) {
+                        return !prev;
+                    },
+                    likes(prev) {
+                        if (isLiked) {
+                            return prev - 1;
+                        }
+                        return prev + 1;
+                    },
+                },
+            });
+        }
+    };
+    const [toggleLikeMutation] = useMutation(TOGGLE_LIKE_MUTATION, {
+        variables: {
+            id,
+        },
+        update: updateToggleLike,
+    });
+    const goToProfile = () => {
+        navigation.navigate("Profile", {
+            username: user.username,
+            id: user.id,
+        });
+    };
     return (
         <Container>
-            <Header onPress={() => navigation.navigate("Profile")}>
+            <Header onPress={goToProfile}>
                 <UserAvatar resizeMode="cover" source={{ uri: user.avatar }} />
                 <Username>{user.username}</Username>
             </Header>
@@ -71,7 +117,7 @@ function Photo({ id, user, caption, file, isLiked, likes }) {
             />
             <ExtraContainer>
                 <Actions>
-                    <Action>
+                    <Action onPress={toggleLikeMutation}>
                         <Ionicons
                             name={isLiked ? "heart" : "heart-outline"}
                             color={isLiked ? "tomato" : "white"}
@@ -82,11 +128,13 @@ function Photo({ id, user, caption, file, isLiked, likes }) {
                         <Ionicons name="chatbubble-outline" color="white" size={22} />
                     </Action>
                 </Actions>
-                <TouchableOpacity onPress={() => navigation.navigate("Likes")}>
+                <TouchableOpacity onPress={() => navigation.navigate("Likes", {
+                    photoId: id,
+                })}>
                     <Likes>{likes === 1 ? "1 like" : `${likes} likes`}</Likes>
                 </TouchableOpacity>
                 <Caption>
-                    <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
+                    <TouchableOpacity onPress={goToProfile}>
                         <Username>{user.username}</Username>
                     </TouchableOpacity>
                     <CaptionText>{caption}</CaptionText>
@@ -106,6 +154,6 @@ Photo.propTypes = {
     file: PropTypes.string.isRequired,
     isLiked: PropTypes.bool.isRequired,
     likes: PropTypes.number.isRequired,
-    commentNumber: PropTypes.number.isRequired,
+    commentNumber: PropTypes.number,
 };
 export default Photo;
